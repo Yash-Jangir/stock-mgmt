@@ -1,0 +1,123 @@
+[product (cloth)]
+images
+name
+code
+category (Shirt, T-shirt, trouser, lower)
+gender (Enum (male, female, unisex))
+age-group (adult, kids)
+price
+description
+
+
+[sku]
+product_id
+color_id
+size_id
+price
+images
+
+
+[stock]
+model_type
+model_id
+stock_qty [0]
+
+
+[color] -> name, code, color_code, description, is_active
+[size]  -> name, code, description, is_active
+[category] -> name, code, parent_id, description, is_active
+
+
+
+
+=============================================================
+
+php artisan serve --host=0.0.0.0 --port=8000
+
+
+// app/Models/Stock.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Stock extends Model
+{
+    protected $fillable = ['stock_qty'];
+
+    // Polymorphic relationship
+    public function model()
+    {
+        return $this->morphTo();
+    }
+}
+
+
+
+// app/Models/Product.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    protected $fillable = ['name', 'price'];
+
+    // Polymorphic one-to-one relationship
+    public function stock()
+    {
+        return $this->morphOne(Stock::class, 'model');
+    }
+}
+
+
+
+
+// app/Models/Sku.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Sku extends Model
+{
+    protected $fillable = ['sku_code', 'price'];
+
+    // Polymorphic one-to-one relationship
+    public function stock()
+    {
+        return $this->morphOne(Stock::class, 'model');
+    }
+}
+
+
+// Create a product
+$product = Product::create(['name' => 'Laptop', 'price' => 1000]);
+
+// Assign stock to the product
+$product->stock()->updateOrCreate(
+    ['model_id' => $product->id, 'model_type' => Product::class],  // Criteria for the existing record
+    ['stock_qty' => 200]  // New values for the record
+);
+
+
+// Create an SKU
+$sku = Sku::create(['sku_code' => 'ABC123', 'price' => 100]);
+
+// Assign stock to the SKU
+$sku->stock()->updateOrCreate(
+    ['model_id' => $sku->id, 'model_type' => Sku::class],  // Criteria for the existing record
+    ['stock_qty' => 200]  // New values for the record
+);
+
+
+$product = Product::find(1);
+$stock = $product->stock;  // Stock record related to the product
+
+$sku = Sku::find(1);
+$stock = $sku->stock;  // Stock record related to the SKU
+
+$stock = Stock::find(1);
+$model = $stock->model; // This will return either a Product or Sku model
+
