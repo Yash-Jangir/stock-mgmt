@@ -108,4 +108,9 @@ class StockController extends Controller
     {
         return view('admin.stocks.scan', compact('type'));
     }
+
+    public function scanResult(Request $request)
+    {
+        
+    }
 }

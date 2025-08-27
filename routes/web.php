@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\{
     CategoryController,
     ProductController,
     StockController,
+    StockTransactionController,
 };
 
 Route::redirect('/', '/login');
@@ -50,8 +51,11 @@ Route::middleware(['auth'])
     // Product Master
     Route::resource('products', ProductController::class);
 
+    // Stock Transaction History
+    Route::get('stock-transactions', [StockTransactionController::class, 'index'])->name('stock-transactions.index');
+
     // Stock List
+    Route::get('stocks/scan-result', [StockController::class, 'getScanResult'])->name('stocks.scanResult');
     Route::get('stocks/scan/{type}', [StockController::class, 'scan'])->name('stocks.scan')->whereIn('type', array_column(\App\Enums\TransactionType::cases(), 'value'));
-    Route::post('stocks/scan/{type}', [StockController::class, 'storeScannedSku'])->name('stocks.scan.store')->whereIn('type', array_column(\App\Enums\TransactionType::cases(), 'value'));
     Route::resource('stocks', StockController::class)->only(['index', 'create', 'store']);
 });
