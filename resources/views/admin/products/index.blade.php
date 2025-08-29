@@ -5,7 +5,7 @@
                 {{ __('Product') }}
             </h2>
             <div class="flex items-center justify-end gap-2">
-                <x-secondary-button type="button" id="gen-barcode">{{ __('Barcode') }}</x-secondary-button>
+                <x-secondary-button type="button" id="gen-stickers" >{{ __('DOWNLOAD QRCODE') }}</x-secondary-button>
                 <x-text-input id="search" name="search" type="text" class="mt-1 block w-full" placeholder="Search..." />
                 <a href="{{ route('admin.products.create') }}" class="bg-green-400 px-4 py-2 rounded-md text-white">
                     +Add
@@ -176,11 +176,12 @@
                     $('#select_all').prop('checked', $('.select').length == $('.select:checked').length);
                 });
 
-                $('#gen-barcode').click(function () {
+                $('#gen-stickers').click(function () {
                     if (!$('.select:checked').length) return alert('Please select product');
 
                     const url = new URL("{!! url()->full() !!}");
-                    url.searchParams.set('export', 'barcode');
+                    url.searchParams.set('export', 'stickers');
+                    url.searchParams.set('type', 'qrcode');
                     url.searchParams.set('ids', $('.select:checked').toArray().map(i => $(i).val()).join(','));
 
                     window.open(url.toString(), '_blank');

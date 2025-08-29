@@ -16,11 +16,58 @@ class StockController extends Controller
     public function index(Request $request)
     {
         $perPage = 10;
-        $stocks = Stock::with('model')->latest('updated_at')->paginate($perPage);
+        $stocks = Stock::with('model');
 
-        // dd($stocks->all());
+        $stocks = $this->applyFilters($stocks);
+
+        $stocks = $stocks->paginate($perPage);
 
         return view('admin.stocks.index', compact('stocks', 'perPage'));
+    }
+
+    private function applyFilters($stocks)
+    {
+        if (request('product_name')) {
+            $pids = Product::with('skus')->where('user_id', auth()->id())->where('name', 'like', '%' . request('product_name') . '%')->get();
+            $sids = $pids->map(fn ($p) => $p->skus->pluck('id'))->flatten(1)->toArray();
+            $pids = $pids->pluck('id')->toArray();
+
+            $stocks = $stocks->whereHas('model', function ($q) use ($pids, $sids) {
+                $q->where(function ($q) use ($pids) {
+                    $q->where('model_type', Product::class)->whereIn('model_id', $pids);
+                })
+                ->orWhere(function ($q) use ($sids) {
+                    $q->where('model_type', Sku::class)->whereIn('model_id', $sids);
+                });
+            });
+        }
+
+        if (request('product_code')) {
+            $pids = Product::with('skus')->where('user_id', auth()->id())->where('name', 'like', '%' . request('product_name') . '%')->get();
+            $sids = $pids->map(fn ($p) => $p->skus->pluck('id'))->flatten(1)->toArray();
+            $pids = $pids->pluck('id')->toArray();
+
+            $stocks = $stocks->whereHas('model', function ($q) use ($pids, $sids) {
+                $q->where(function ($q) use ($pids) {
+                    $q->where('model_type', Product::class)->whereIn('model_id', $pids);
+                })
+                ->orWhere(function ($q) use ($sids) {
+                    $q->where('model_type', Sku::class)->whereIn('model_id', $sids);
+                });
+            });
+        }
+
+        if (request('type')) {
+            $stocks = $stocks->where('type', request('type'));
+        }
+
+        if (request('order_by') && request('order')) {
+            $stocks = $stocks->orderBy(request('order_by'), request('order'));
+        }
+
+        $stocks = $stocks->latest('updated_at');
+
+        return $stocks;
     }
 
     public function create()

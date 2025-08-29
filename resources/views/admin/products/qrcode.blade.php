@@ -21,7 +21,7 @@
                                     {{ $product->name }} - [{{ $sku->color?->name }}] - [{{ $sku->size?->name }}]
                                 </div>
                                 <div style="height: 80px;">
-                                    {!! DNS1D::getBarcodeSVG("p:{$product->id}|s:{$sku->id}", 'C128', 3, 80, 'black', false) !!}
+                                    {!! DNS2D::getBarcodeSVG("p:{$product->id}|s:{$sku->id}", 'QRCODE', 3, 3, 'black') !!}
                                 </div>
                             </div>
                         @empty
@@ -30,7 +30,7 @@
                                     {{ $product->name }}
                                 </div>
                                 <div style="height: 80px;">
-                                    {!! DNS1D::getBarcodeSVG("p:{$product->id}|p:{$product->id}", 'C128', 3, 80, 'black', false) !!}
+                                    {!! DNS1D::getBarcodeSVG("p:{$product->id}|p:{$product->id}", 'QRCODE', 3, 3, 'black') !!}
                                 </div>
                             </div>
                         @endforelse

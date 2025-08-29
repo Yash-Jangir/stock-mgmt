@@ -26,11 +26,6 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-
-Route::get('test', function () {
-    dd(array_column(\App\Enums\Gender::cases(), 'value'));
-});
-
 Route::middleware(['auth'])
     ->prefix('admin')
     ->name('admin.')

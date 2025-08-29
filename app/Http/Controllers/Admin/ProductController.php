@@ -30,8 +30,9 @@ class ProductController extends Controller
 
         $products = $this->applyFilters($products);
 
-        if (request('export') == 'barcode') {
-            return $this->exportBarcodes($products->whereIn('id', explode(',', request('ids')))->get());
+        if (request('export') == 'stickers') {
+            $type = request('type', 'qrcode');
+            return $this->exportStickers($products->whereIn('id', explode(',', request('ids')))->get(), $type);
         }
 
         $products = $products->paginate($perPage);
@@ -228,18 +229,19 @@ class ProductController extends Controller
         return redirect()->back();
     }
 
-    private function exportBarcodes($products)
+    private function exportStickers($products, $type)
     {
         $products->load('skus');
 
-        $pdf = Pdf::loadView('admin.products.barcode', compact('products'))
+        $view    = 'admin.products.' . $type;
+        $pdfName = "stickers_" . date('YmdHis') . ".pdf";
+
+        $pdf = Pdf::loadView($view, compact('products'))
                 ->setPaper('a4', 'portrait')
                 ->setOption('margin-left', '20')
                 ->setOption('margin-right', '20')
                 ->setOption('margin-top', '12')
                 ->setOption('margin-bottom', '12');
-
-        $pdfName = 'barcodes_' . date('YmdHis') . '.pdf';
 
         return $pdf->download($pdfName);
     }
