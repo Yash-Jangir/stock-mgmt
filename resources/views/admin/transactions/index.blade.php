@@ -38,6 +38,24 @@
                                     <option value="out" @selected(request('type') == 'out')>{{ __('Stock-Out') }}</option>
                                 </select>
                             </div>
+                            <div>
+                                <x-input-label for="color_id" :value="__('Color')" />
+                                <select name="color_id" id="color_id" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                    <option value=""></option>
+                                    @foreach ($colors as $color)
+                                        <option value="{{ $color->id }}" @selected(request('color_id') == $color->id)>{{ $color->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="size_id" :value="__('Size')" />
+                                <select name="size_id" id="size_id" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                    <option value=""></option>
+                                    @foreach ($sizes as $size)
+                                        <option value="{{ $size->id }}" @selected(request('size_id') == $size->id)>{{ $size->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
     
                         <div class="mb-2">
@@ -76,31 +94,51 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-100 dark:bg-gray-800">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('#No.') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Product') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Color') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Size') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Type') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Stock QTY') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Transaction Date') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('#No.') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Image') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Product') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Color') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Size') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Type') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Stock QTY') }}</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Transaction Date') }}</th>
                             </tr>
                         </thead>
 
                         <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
 
                             @forelse ($transactions as $transaction)
+                                @php $product = ($transaction->model instanceof \App\Models\Product) ? $transaction->model : $transaction->model->product @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ (request('page', 1) - 1) * $perPage + $loop->iteration }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $transaction->model->name ?? $transaction->model->product?->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->model->color?->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->model->size?->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->type == 'in' ? 'Stock In' : 'Stock Out' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->stock_qty }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->created_at->format('M d, Y, h:i A') }}</td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ (request('page', 1) - 1) * $perPage + $loop->iteration }}</td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                        @if ($product->images->first())
+                                        <div class="relative h-16 w-16 overflow-hidden">
+                                            <img src="{{ $product->images->first()?->getUrl('thumb') }}" alt="" class="absolute top-0 left-0 w-full h-full" style="object-fit: contain;">
+                                        </div>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $transaction->model->name ?? $transaction->model->product?->name }}</td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        <div class="flex items-center gap-4">
+                                            <span class="w-8 h-8 rounded-md" style="background-color: {{ $transaction->model->color?->color_code }};"></span>
+                                            <p>{{ $transaction->model->color?->name }}</p>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->model->size?->name }}</td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        @if ($transaction->type == 'in')
+                                            <span class="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Stokc-In</span>
+                                        @else
+                                            <span class="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Stock-Out</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->stock_qty }}</td>
+                                    <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $transaction->created_at->format('M d, Y, h:i A') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6">
+                                    <td colspan="8">
                                         <div class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                             No record found.
                                         </div>

@@ -82,15 +82,16 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-100 dark:bg-gray-800">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <x-text-input type="checkbox" name="select_all" id="select_all" />
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('#No.') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Product Code') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Product Name') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Price') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Status') }}</th>
-                                <th class="px-6 py-3"></th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('#No.') }}</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Image') }}</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __ ('Product Code') }}</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Product Name') }}</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Price') }}</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('Status') }}</th>
+                                <th class="px-2 py-3"></th>
                             </tr>
                         </thead>
 
@@ -98,21 +99,28 @@
 
                             @forelse ($products as $product)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         <x-text-input type="checkbox" class="select" value="{{ $product->id }}" />
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ (request('page', 1) - 1) * $perPage + $loop->iteration }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $product->code }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $product->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ number_format($product->price) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ (request('page', 1) - 1) * $perPage + $loop->iteration }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                        @if ($product->images->first())
+                                        <div class="relative h-16 w-16 overflow-hidden">
+                                            <img src="{{ $product->images->first()?->getUrl('thumb') }}" alt="" class="absolute top-0 left-0 w-full h-full" style="object-fit: contain;">
+                                        </div>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $product->code }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $product->name }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">₹{{ number_format($product->price) }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap">
                                         @if ($product->is_active)
                                             <span class="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</span>
                                         @else
                                             <span class="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">In-active</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end gap-4">
                                             <a href="{{ route('admin.products.edit', $product->id) }}">
                                                 <x-secondary-button type="button">{{ __('Edit') }}</x-secondary-button>
@@ -127,7 +135,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6">
+                                    <td colspan="7">
                                         <div class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                             No record found.
                                         </div>

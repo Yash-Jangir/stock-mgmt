@@ -111,7 +111,7 @@
             @csrf
             @method('PUT')
 
-            <div id="dropzone-popup" class="hidden fixed w-full h-full z-10 top-0 left-0 flex items-center justify-center  bg-white dark:bg-gray-800/[.25]">
+            <div id="dropzone-popup" class="hidden fixed w-full h-full z-10 top-0 left-0 flex items-center justify-center bg-white/[.25] dark:bg-gray-800/[.25]">
                 <div class="flex flex-col bg-white dark:bg-gray-800 p-4 rounded-lg w-2/3 h-1/4 shadow border border-gray-700">
                     <div class="font-semibold text-lg text-gray-800 dark:text-gray-200 leading-tight underline my-2">{{ __('Upload Image') }}</div>
                     <div id="dropzone-elm" class="w-full h-full cursor-pointer grid grid-cols-5 gap-4">

@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Sku;
 use App\Models\Stock;
-use App\Models\StockTransaction;
+use App\Models\Color;
+use App\Models\Size;
 
 class StockController extends Controller
 {
@@ -22,7 +23,10 @@ class StockController extends Controller
 
         $stocks = $stocks->paginate($perPage);
 
-        return view('admin.stocks.index', compact('stocks', 'perPage'));
+        $colors = Color::where('user_id', auth()->id())->where('is_active', 1)->orderBy('rank', 'asc')->latest('updated_at')->get();
+        $sizes  = Size::where('user_id', auth()->id())->where('is_active', 1)->orderBy('rank', 'asc')->latest('updated_at')->get();
+
+        return view('admin.stocks.index', compact('stocks', 'perPage', 'colors', 'sizes'));
     }
 
     private function applyFilters($stocks)
@@ -54,6 +58,20 @@ class StockController extends Controller
                 ->orWhere(function ($q) use ($sids) {
                     $q->where('model_type', Sku::class)->whereIn('model_id', $sids);
                 });
+            });
+        }
+
+        if (request('color_id')) {
+            $sids = Sku::where('user_id', auth()->id())->where('color_id', request('color_id'))->pluck('id')->toArray();
+            $stocks = $stocks->whereHas('model', function ($q) use ($sids) {
+                $q->where('model_type', Sku::class)->whereIn('model_id', $sids);
+            });
+        }
+
+        if (request('size_id')) {
+            $sids = Sku::where('user_id', auth()->id())->where('size_id', request('size_id'))->pluck('id')->toArray();
+            $stocks = $stocks->whereHas('model', function ($q) use ($sids) {
+                $q->where('model_type', Sku::class)->whereIn('model_id', $sids);
             });
         }
 
