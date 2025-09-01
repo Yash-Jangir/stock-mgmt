@@ -1,5 +1,5 @@
 @php
-    $startOfMonth = now()->subMonth()->startOfMonth()->format('Y-m-d H:i:s');
+    $startOfMonth = now()->startOfMonth()->format('Y-m-d H:i:s');
     $endOfMonth   = now()->endOfMonth()->format('Y-m-d H:i:s');
     
     $mostStockRecords  = \App\Models\Stock::with('model')->whereBetween('updated_at', [$startOfMonth, $endOfMonth])->orderBy('stock_qty', 'desc')->limit(3)->get();
