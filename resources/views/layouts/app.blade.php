@@ -25,34 +25,39 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-        
-            @if (session('success'))
-                <div
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="toast-success absolute z-[9] top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg">
-                    <div class="flex items-center justify-between gap-4">
-                        <span>{{ session('success') }}</span>
-                        <button onclick="this.closest('.toast-success').remove()" class="text-white hover:text-gray-200">&times;</button>
-                    </div>
-                </div>
-            @endif
+            <div id="toastr-wrapper" class="fixed inline-flex flex-col top-0 left-1/2 transform -translate-x-1/2 z-[50]">
+                @if (session('success'))
+                    @foreach (is_array(session('success')) ? session('success') : [session('success')] as $message)
+                        <div
+                            x-data="{ show: true }"
+                            x-show="show"
+                            x-transition
+                            x-init="setTimeout(() => show = false, 2500)"
+                            class="toast-success mt-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg">
+                            <div class="flex items-center justify-between gap-4">
+                                <span>{{ $message }}</span>
+                                <button onclick="this.closest('.toast-success').remove()" class="text-white hover:text-gray-200">&times;</button>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
 
-            @if (session('error'))
-                <div
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="toast-err absolute z-[9] top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-2 bg-red-500 text-white rounded shadow-lg">
-                    <div class="flex items-center justify-between gap-4">
-                        <span>{{ session('error') }}</span>
-                        <button onclick="this.closest('.toast-err').remove()" class="text-white hover:text-gray-200">&times;</button>
-                    </div>
-                </div>
-            @endif
+                @if (session('error'))
+                    @foreach (is_array(session('error')) ? session('error') : [session('error')] as $message)
+                        <div
+                            x-data="{ show: true }"
+                            x-show="show"
+                            x-transition
+                            x-init="setTimeout(() => show = false, 2500)"
+                            class="toast-err z-[9] mt-4 px-4 py-2 bg-red-500 text-white rounded shadow-lg">
+                            <div class="flex items-center justify-between gap-4">
+                                <span>{{ $message }}</span>
+                                <button onclick="this.closest('.toast-err').remove()" class="text-white hover:text-gray-200">&times;</button>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
 
             @include('layouts.navigation')
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreStockRequest;
 use Illuminate\Http\Request;
 
 use App\Models\Product;
@@ -90,7 +91,7 @@ class StockController extends Controller
 
     public function create()
     {
-        $products = Product::with(['skus', 'skus.color', 'skus.size'])
+        $products = Product::with(['stock', 'skus', 'skus.stock', 'skus.color', 'skus.size'])
                         ->where('is_active', 1)
                         ->whereHas('skus', function ($query) {
                             $query->where('is_active', 1);
@@ -103,41 +104,48 @@ class StockController extends Controller
         return view('admin.stocks.create', compact('products', 'transaction_types'));
     }
 
-    public function store(Request $request)
+    public function store(StoreStockRequest $request)
     {
-        $request->validate([
-            'product_id'    => 'required|string|max:255',
-            'type'          => 'required|string|in:in,out',
-            'stock_qty'     => 'required|numeric|min:1',
-        ]);
+        $unsavedStocks = [];
 
-        $instance = $this->resolveModelInstance($request->product_id);
+        \DB::transaction(function() use ($request, &$unsavedStocks) {
+            $multiplier = ($request->type === TransactionType::IN->value ? 1 : -1);
+            
+            foreach ($request->product_id as $k => $id) {
+                $stockQty = $request->stock_qty[$k];
+                $instance = $this->resolveModelInstance($id);
 
-        if (!$instance) {
-            return redirect()->route('admin.stocks.create')->with('error', 'Product not found');
-        }
+                if (!$instance || (int) $stockQty === 0) continue;
 
-        \DB::transaction(function()use ($instance, $request) {
-            $instance->transaction()->create([
-                'user_id'   => auth()->id(),
-                'type'      => $request->type,
-                'stock_qty' => $request->stock_qty
-            ]);
-
-            $stock = $instance->stock;
-
-            $instance->stock()->updateOrCreate(
-                [
-                    'user_id'    => auth()->id(),
-                    'model_type' => get_class($instance),
-                    'model_id'   => $instance->id
-                ], [
-                    'stock_qty' => (@$stock->stock_qty) + ($request->stock_qty * ($request->type === TransactionType::IN->value ? 1 : -1))
-                ]
-            );
+                $instance->transaction()->create([
+                    'user_id'   => auth()->id(),
+                    'type'      => $request->type,
+                    'stock_qty' => $stockQty
+                ]);
+    
+                $stock = $instance->stock;
+                if ($multiplier == -1 && @$stock->stock_qty < $stockQty) {
+                    $unsavedStocks[] = ($instance instanceof Product) ? $instance->name : "{$instance->product?->name}-[{$instance->color?->name}]-[{$instance->size?->name}]"; 
+                    continue;
+                }
+    
+                $instance->stock()->updateOrCreate(
+                    [
+                        'user_id'    => auth()->id(),
+                        'model_type' => get_class($instance),
+                        'model_id'   => $instance->id
+                    ], [
+                        'stock_qty' => (@$stock->stock_qty) + ($stockQty * $multiplier)
+                    ]
+                );
+            }
         });
 
         session()->flash('success', 'Stock updated successfully');
+
+        if ($unsavedStocks) {
+            session()->flash('error', $unsavedStocks);
+        }
 
         return to_route('admin.stocks.index');
     }

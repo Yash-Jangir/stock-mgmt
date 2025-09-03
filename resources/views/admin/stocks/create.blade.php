@@ -35,33 +35,18 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <section>
-                        <header class="flex items-center justify-between gap-4">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Create New Stock') }}
-                            </h2>
-                            <x-secondary-button type="button" id="scan-barcode">{{ __('SCAN BARCODE') }}</x-secondary-button>
-                        </header>
+                <section>
+                    <header class="flex items-center justify-between gap-4 mb-4">
+                        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            {{ __('Create New Stock') }}
+                        </h2>
+                        <x-secondary-button type="button" id="scan-qrcode">{{ __('SCAN QRCODE') }}</x-secondary-button>
+                    </header>
 
-                        <form method="post" action="{{ route('admin.stocks.store') }}" class="mt-6 space-y-6">
-                            @csrf
+                    <form id="stock-form" method="post" action="{{ route('admin.stocks.store') }}" class="mt-6 space-y-6">
+                        @csrf
 
-                            <div>
-                                <x-input-label for="product_id" :value="__('Product')" />
-                                <select name="product_id" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
-                                    <option value=""></option>
-                                    @foreach ($products as $product)
-                                        @forelse($product->skus as $sku)
-                                            <option value="p:{{ $product->id }}|s:{{ $sku->id }}">{{ $product->name }} - [{{ $sku->color->name }}] - [{{ $sku->size->name }}]</option>
-                                        @empty
-                                            <option value="p:{{ $product->id }}|p:{{ $product->id }}">{{ $product->name }}</option>
-                                        @endforelse
-                                    @endforeach
-                                </select>
-                                <x-input-error class="mt-2" :messages="$errors->get('product_id')" />
-                            </div>
-
+                        <div class="w-2/3 grid grid-cols-2 gap-2">
                             <div>
                                 <x-input-label for="type" :value="__('Transaction Type')" />
                                 <select name="type" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
@@ -73,21 +58,56 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('type')" />
                             </div>
 
-                            <div>
-                                <x-input-label for="stock_qty" :value="__('Stock QTY')" />
-                                <x-text-input id="stock_qty" name="stock_qty" type="number" class="mt-1 block w-full" :value="old('stock_qty')" placeholder="{{ __('Stock QTY') }}" required />
-                                <x-input-error class="mt-2" :messages="$errors->get('stock_qty')" />
+                            <div class="flex items-end justify-end">
+                                <button type="button" id="add-row" class="bg-green-400 px-4 py-2 font-semibold text-sm uppercase tracking-widest rounded-md text-white">+Add Row</button>
                             </div>
+                        </div>
 
-                            <div class="flex items-center gap-4">
-                                <a href="{{ route('admin.stocks.index') }}">
-                                    <x-secondary-button>{{ __('Cancel') }}</x-secondary-button>
-                                </a>
-                                <x-primary-button>{{ __('Save') }}</x-primary-button>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <x-input-label for="product_id" :value="__('Product')" />
                             </div>
-                        </form>
-                    </section>
-                </div>
+    
+                            <div>
+                                <x-input-label for="stock_qty[]" :value="__('Stock QTY')" />
+                            </div>
+                        </div>
+                        
+                        <div id="row-wrapper">
+                            <div class="prd-row grid grid-cols-3 gap-2 mb-2">
+                                <div>
+                                    <select name="product_id[]" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                        <option value=""></option>
+                                        @foreach ($products as $product)
+                                            @forelse($product->skus as $sku)
+                                                <option value="p:{{ $product->id }}|s:{{ $sku->id }}" data-stock="{{ $sku->stock?->stock_qty }}">{{ $product->name }} - [{{ $sku->color->name }}] - [{{ $sku->size->name }}]</option>
+                                            @empty
+                                                <option value="p:{{ $product->id }}|p:{{ $product->id }}" data-stock="{{ $product->stock?->stock_qty }}">{{ $product->name }}</option>
+                                            @endforelse
+                                        @endforeach
+                                    </select>
+                                    <x-input-error class="mt-2" :messages="$errors->get('product_id')" />
+                                </div>
+
+                                <div>
+                                    <x-text-input id="stock_qty" name="stock_qty[]" type="number" class="mt-1 block w-full" :value="old('stock_qty')" placeholder="{{ __('Stock QTY') }}" required />
+                                    <x-input-error class="mt-2" :messages="$errors->get('stock_qty')" />
+                                </div>
+
+                                <div class="flex items-end mb-1">
+                                    <x-danger-button class="rm-btn" type="button" style="display: none;">{{ __('Delete') }}</x-danger-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('admin.stocks.index') }}">
+                                <x-secondary-button>{{ __('Cancel') }}</x-secondary-button>
+                            </a>
+                            <x-primary-button type="button" id="save-stock">{{ __('Save') }}</x-primary-button>
+                        </div>
+                    </form>
+                </section>
             </div>
         </div>
     </div>
@@ -98,12 +118,12 @@
             $(document).ready(function() {
                 const toastr = {
                     error: (message) => {
-                        $('body').append(`<div
+                        $('#toastr-wrapper').append(`<div
                             x-data="{ show: true }"
                             x-show="show"
                             x-transition
                             x-init="setTimeout(() => show = false, 2000)"
-                            class="toast-err absolute z-[9] top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-2 bg-red-500 text-white rounded shadow-lg">
+                            class="toast-err mt-4 px-4 py-2 bg-red-500 text-white rounded shadow-lg">
                             <div class="flex items-center justify-between gap-4">
                                 <span>[message]</span>
                                 <button onclick="this.closest('.toast-err').remove()" class="text-white hover:text-gray-200">&times;</button>
@@ -111,12 +131,12 @@
                         </div>`.replace('[message]', message));
                     },
                     success: (message) => {
-                        $('body').append(`<div
+                        $('#toastr-wrapper').append(`<div
                             x-data="{ show: true }"
                             x-show="show"
                             x-transition
                             x-init="setTimeout(() => show = false, 2000)"
-                            class="toast-success absolute z-[9] top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg">
+                            class="toast-success mt-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg">
                             <div class="flex items-center justify-between gap-4">
                                 <span>[message]</span>
                                 <button onclick="this.closest('.toast-success').remove()" class="text-white hover:text-gray-200">&times;</button>
@@ -125,8 +145,55 @@
                     }
                 };
 
-                // toastr.success('Successfully scanned');
-                // toastr.error('Failed to scan');
+                const toggleRemoveBtn = () => {
+                    $('.rm-btn')[$('#row-wrapper .prd-row').length <= 1 ? 'hide' : 'show']();
+                };
+
+                const allProductFieldSelected = () => $('[name="product_id[]"]').toArray().every(input => input.value != '');
+
+                const getLastEmptyProductField = () => {
+                    const lastEmptyField = $(`[name="product_id[]"]`).toArray().reverse().find(input => input.value != '').next();
+                    if (lastEmptyField.length) {
+                        return lastEmptyField;
+                    }
+
+                    $('#add-row').click();
+                    return $(`[name="product_id[]"]`).last();
+                };
+
+                const formSubmition = (form) => {
+                    const typeOut = $('[name="type"]').val() === 'out';
+                    $('[name="product_id[]"]').each(function () {
+                        if (!$(this).val()) {
+                            $(this).closest('.prd-row').css({'background': 'tomato'}).remove();
+                        }
+                    });
+
+                    $('[name="stock_qty[]"]').each(function () {
+                        if (typeOut) {
+                            const product    = $(this).closest('.prd-row').find('[name="product_id[]"]').val();
+                            const availStock = +$(this).closest('.prd-row').find(`[name="product_id[]"]`).find(`[value="${product}"]`).data('stock');
+
+                            if (availStock) {
+                                if (+$(this).val() > availStock) {
+                                    $(this).val(availStock);
+                                }
+                            }
+                        }
+
+                        if (!$(this).val() || !+$(this).val()) {
+                            $(this).closest('.prd-row').css({'background': 'tomato'}).remove();
+                        }
+                        $(this).val(Math.abs($(this).val()));
+                    });
+
+                    if ($('[name="product_id[]"]').length) {
+                        form.submit();
+                    } else {
+                        toastr.error("Please add at least one product.");
+                        $('#add-row').click();
+                    }
+                }
 
                 class QrCodeScanner {
                     constructor(elm) {
@@ -142,11 +209,13 @@
                         $(this.DomElment).css('display', 'flex');
                         this.elm.start(this.face, this.config,
                             (text, res) => {
-                                $(`[name="product_id"]`).val(text);
-                                if ($(`[name="product_id"]`).val() != '') {
+                                const field = getLastEmptyProductField();
+                                field.val(text).change();
+
+                                if (field.val() != '') {
                                     toastr.success("Product Scanned Successfully");
-                                    this.stopScanning();
-                                } 
+                                    // this.stopScanning();
+                                }
                             }
                         ).then().catch(err => {
                             $(this.DomElment).hide()
@@ -174,13 +243,109 @@
                 }
 
                 let scnr = new QrCodeScanner('reader');
-                $('#scan-barcode').click(function () {
+                $('#scan-qrcode').click(function () {
                     scnr.startScanning();
                 });
 
                 $('#close-scanner').click(function () {
                     scnr.stopScanning();
                 });
+
+                $('#add-row').click(function () {
+                    $('#row-wrapper').append(`
+                        <div class="prd-row grid grid-cols-3 gap-2 mb-2">
+                            <div>
+                                <select name="product_id[]" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                    <option value=""></option>
+                                    @foreach ($products as $product)
+                                        @forelse($product->skus as $sku)
+                                            <option value="p:{{ $product->id }}|s:{{ $sku->id }}" data-stock="{{ $sku->stock?->stock_qty }}">{{ $product->name }} - [{{ $sku->color->name }}] - [{{ $sku->size->name }}]</option>
+                                        @empty
+                                            <option value="p:{{ $product->id }}|p:{{ $product->id }}" data-stock="{{ $product->stock?->stock_qty }}">{{ $product->name }}</option>
+                                        @endforelse
+                                    @endforeach
+                                </select>
+                                <x-input-error class="mt-2" :messages="$errors->get('product_id')" />
+                            </div>
+
+                            <div>
+                                <x-text-input id="stock_qty" name="stock_qty[]" type="number" class="mt-1 block w-full" :value="old('stock_qty')" placeholder="{{ __('Stock QTY') }}" required />
+                                <x-input-error class="mt-2" :messages="$errors->get('stock_qty')" />
+                            </div>
+
+                            <div class="rm-btn flex items-end mb-1">
+                                <x-danger-button type="button">{{ __('Delete') }}</x-danger-button>
+                            </div>
+                        </div>
+                    `);
+
+                    toggleRemoveBtn();
+                });
+
+                $('body').on('click', '.rm-btn', function () {
+                    $(this).closest('.prd-row').remove();
+                    toggleRemoveBtn();
+                });
+
+                $('body').on('change', '[name="product_id[]"]', function () {
+                    const value   = $(this).val().trim();
+                    const isExist = $('[name="product_id[]"]').not($(this)).toArray().some(input => $(input).val().trim() == value && value);
+
+                    if (isExist) {
+                        $(this).val('');
+                        toastr.error("Product already picked.");
+                    } else {
+                        $(this).closest('.prd-row').find('[name="stock_qty[]"]').change();
+                    }
+
+                    if (allProductFieldSelected()) $('#add-row').click();
+                });
+
+                $('body').on('change', '[name="stock_qty[]"]', function () {
+                    const typeOut = $('[name="type"]').val() === 'out';
+                    const row     = $(this).closest('.prd-row');
+                    const product = row.find('[name="product_id[]"]').val();
+                    let qty       = isNaN(+$(this).val()) ? 0 : +$(this).val();
+
+                    if (qty < 0) {
+                        toastr.error("Stock QTY can't be negative.");
+                        qty = Math.abs(qty);
+                        $(this).val(qty);
+                    }
+
+                    if (typeOut && qty && product) {
+                        let stock = row.find(`[name="product_id[]"]`).find(`[value="${product}"]`).data('stock');
+                        stock     = isNaN(+stock) ? 0 : +stock;
+                        if (qty > stock) {
+                            $(this).val(stock);
+                            toastr.error(`Can't pick more than available stock: ${stock}.`);
+                        }
+                    }
+                });
+
+                $('[name="type"]').change(function () {
+                    $('[name="product_id[]"]').change();
+                });
+
+                $('#stock-form').submit(function (e) {
+                    e.preventDefault();
+                    
+                    formSubmition(this);
+                });
+
+                $('#stock-form').submit(function (e) {
+                    e.preventDefault();
+                    
+                    formSubmition(this);
+                });
+
+                $('#save-stock').click(function (e) {
+                    e.preventDefault();
+                    
+                    formSubmition($(this).closest('form')[0]);
+                });
+
+                toggleRemoveBtn();
             });
         </script>
     </x-slot>
