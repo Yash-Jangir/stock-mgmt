@@ -24,6 +24,18 @@
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('admin.purchases.index')" :active="request()->routeIs('admin.purchases.*')">
+                        {{ __('Purchase List') }}
+                    </x-nav-link>
+                </div>
+
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('admin.sells.index')" :active="request()->routeIs('admin.sells.*')">
+                        {{ __('Sell List') }}
+                    </x-nav-link>
+                </div>
+
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('admin.stocks.index')" :active="request()->routeIs('admin.stocks.*')">
                         {{ __('Stock') }}
                     </x-nav-link>
@@ -123,8 +135,20 @@
                     {{ __('Products') }}
                 </x-responsive-nav-link>
 
+                <x-responsive-nav-link :href="route('admin.purchases.index')">
+                    {{ __('Purchase List') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.sells.index')">
+                    {{ __('Sell List') }}
+                </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('admin.stocks.index')">
                     {{ __('Stock') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.stock-transactions.index')">
+                    {{ __('Stock Transactions') }}
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('admin.masters')">

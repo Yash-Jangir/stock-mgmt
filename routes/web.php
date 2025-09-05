@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\{
     ProductController,
     StockController,
     StockTransactionController,
+    PurchaseController,
+    SellController,
 };
 
 Route::redirect('/', '/login');
@@ -53,4 +55,10 @@ Route::middleware(['auth'])
     Route::get('stocks/scan-result', [StockController::class, 'getScanResult'])->name('stocks.scanResult');
     Route::get('stocks/scan/{type}', [StockController::class, 'scan'])->name('stocks.scan')->whereIn('type', array_column(\App\Enums\TransactionType::cases(), 'value'));
     Route::resource('stocks', StockController::class)->only(['index', 'create', 'store']);
+
+    // Purchase Controller
+    Route::resource('purchases', PurchaseController::class);
+
+    // Sell Controller
+    Route::resource('sells', SellController::class);
 });

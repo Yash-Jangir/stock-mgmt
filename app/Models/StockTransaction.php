@@ -17,6 +17,9 @@ class StockTransaction extends Model
         'model_id',
         'stock_qty',
         'type',
+        'price',
+        'dis_price',
+        'discount',
     ];
 
     public function model()

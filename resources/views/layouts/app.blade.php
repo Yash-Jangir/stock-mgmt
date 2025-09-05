@@ -16,6 +16,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <link rel="stylesheet" href="{{ asset('/assets/css/toastr.min.css') }}">
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -25,40 +27,6 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <div id="toastr-wrapper" class="fixed inline-flex flex-col top-0 left-1/2 transform -translate-x-1/2 z-[50]">
-                @if (session('success'))
-                    @foreach (is_array(session('success')) ? session('success') : [session('success')] as $message)
-                        <div
-                            x-data="{ show: true }"
-                            x-show="show"
-                            x-transition
-                            x-init="setTimeout(() => show = false, 2500)"
-                            class="toast-success mt-4 px-4 py-2 bg-green-500 text-white rounded shadow-lg">
-                            <div class="flex items-center justify-between gap-4">
-                                <span>{{ $message }}</span>
-                                <button onclick="this.closest('.toast-success').remove()" class="text-white hover:text-gray-200">&times;</button>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-
-                @if (session('error'))
-                    @foreach (is_array(session('error')) ? session('error') : [session('error')] as $message)
-                        <div
-                            x-data="{ show: true }"
-                            x-show="show"
-                            x-transition
-                            x-init="setTimeout(() => show = false, 2500)"
-                            class="toast-err z-[9] mt-4 px-4 py-2 bg-red-500 text-white rounded shadow-lg">
-                            <div class="flex items-center justify-between gap-4">
-                                <span>{{ $message }}</span>
-                                <button onclick="this.closest('.toast-err').remove()" class="text-white hover:text-gray-200">&times;</button>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-
             @include('layouts.navigation')
 
             <!-- Page Heading -->
@@ -94,6 +62,39 @@
             }
         </script>
         <script src="{{ asset('/assets/js/jquery.min.js') }}"></script>
+        <script src="{{ asset('/assets/js/toastr.min.js') }}"></script>
+        <script>
+            toastr.options = {
+                "closeButton": false,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": false,
+                "positionClass": "toast-top-center",
+                "preventDuplicates": true,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+
+            @if (session('success'))
+                @foreach (is_array(session('success')) ? session('success') : [session('success')] as $message)
+                    toastr.success('{{ $message }}');
+                @endforeach
+            @endif
+
+            @if (session('error'))
+                @foreach (is_array(session('error')) ? session('error') : [session('error')] as $message)
+                    toastr.error('{{ $message }}');
+                @endforeach
+            @endif
+        </script>
+
         @isset($script)
             {{ $script }}
         @endisset

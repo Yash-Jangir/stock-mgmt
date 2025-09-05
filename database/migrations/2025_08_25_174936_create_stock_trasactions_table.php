@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('model_type');
             $table->integer('stock_qty');
             $table->enum('type', array_column(App\Enums\TransactionType::cases(), 'value'));
+            $table->unsignedInteger('price')->default(0)->nullable();
+            $table->unsignedInteger('dis_price')->default(0)->nullable();
+            $table->unsignedInteger('discount')->default(0)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
