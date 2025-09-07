@@ -19,6 +19,7 @@ class BillingDetail extends Model
         'qty',
         'unit_price',
         'price',
+        'unit_discount',
         'created_at',
         'updated_at',
         'deleted_at',

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
+use App\Traits\SkuResolver;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Models\{
     Color,
@@ -15,12 +17,20 @@ use App\Models\{
     BillingDetail,
 };
 
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
+
 class PurchaseController extends Controller
 {
+    use SkuResolver;
+
     public function index(Request $request)
     {
         $perPage = 10;
         $purchases = BillingSlip::where('user_id', auth()->id())->where('classification', 'purchase');
+
+        if (request('export') == 'pdf') {
+            return $this->exportPDF($purchases->find(request('id')));
+        }
 
         $purchases = $this->applyFilters($purchases);
 
@@ -65,7 +75,7 @@ class PurchaseController extends Controller
                         ->latest('updated_at')
                         ->get();
 
-        $slip_no  = BillingSlip::newSlipNo();
+        $slip_no  = BillingSlip::newSlipNo('purchase');
 
         return view('admin.purchases.create', compact('products', 'slip_no'));
     }
@@ -74,111 +84,99 @@ class PurchaseController extends Controller
     {
         $unsavedStocks = [];
 
-        \DB::transaction(function() use ($request, &$unsavedStocks) {
-            $multiplier = 1;
+        try {
+            \DB::transaction(function() use ($request, &$unsavedStocks) {
+                $multiplier = 1;
 
-            $bill = BillingSlip::create([
-                'user_id'           => auth()->id(),
-                'year'              => date('Y'),
-                'seq'               => BillingSlip::newSeqNo(),
-                'slip_date'         => date('Y-m-d'),
-                'classification'    => 'purchase',
-                'client_name'       => $request->supplier_name,
-                'address'           => $request->address,
-                'gst_number'        => $request->gst_number,
-                'contact_no'        => $request->contact_no,
-                'email'             => $request->email,
-                'discount'          => $request->discount,
-                'total_price'       => $request->total_price,
-            ]);
-            
-            foreach ($request->product_id as $k => $id) {
-                $stockQty = $request->qty[$k];
-                $instance = $this->resolveModelInstance($id);
+                $bill = BillingSlip::create([
+                    'user_id'           => auth()->id(),
+                    'year'              => date('Y'),
+                    'seq'               => BillingSlip::newSeqNo('purchase'),
+                    'slip_date'         => date('Y-m-d'),
+                    'classification'    => 'purchase',
+                    'client_name'       => $request->supplier_name,
+                    'address'           => $request->address,
+                    'gst_number'        => $request->gst_number,
+                    'contact_no'        => $request->contact_no,
+                    'email'             => $request->email,
+                    'discount'          => $request->discount,
+                    'total_price'       => $request->total_price,
+                ]);
+                
+                foreach ($request->product_id as $k => $id) {
+                    $stockQty = $request->qty[$k];
+                    $instance = $this->resolveInstance($id);
 
-                if (!$instance || (int) $stockQty === 0) continue;
+                    if (!$instance) {
+                        throw ValidationException::withMessages([
+                            'invalid_product' => "Product Not found",
+                        ]);
+                    }
 
-                $stock = $instance->stock;
-                if ($multiplier == -1 && @$stock->stock_qty < $stockQty) {
-                    $unsavedStocks[] = ($instance instanceof Product) ? $instance->name : "{$instance->product?->name}-[{$instance->color?->name}]-[{$instance->size?->name}]"; 
-                    continue;
+                    if (!$instance || (int) $stockQty === 0) continue;
+
+                    $stock = $instance->stock;
+                    if ($multiplier == -1 && @$stock->stock_qty < $stockQty) {
+                        $unsavedStocks[] = ($instance instanceof Product) ? $instance->name : "{$instance->product?->name}-[{$instance->color?->name}]-[{$instance->size?->name}]"; 
+                        continue;
+                    }
+
+                    // Billing Detail
+                    [$product, $sku] = $instance instanceof Product ? [$instance, null] : [$instance->product, $instance];
+                    $detailRecord    = BillingDetail::create([
+                        'user_id'           => auth()->id(),
+                        'billing_slip_id'   => $bill->id,
+                        'product_id'        => $product->id,
+                        'sku_id'            => @$sku->id,
+                        'qty'               => $stockQty,
+                        'unit_price'        => $request->unit_price[$k],
+                        'price'             => $request->price[$k],
+                    ]);
+
+
+                    // Transaction
+                    $instance->transaction()->create([
+                        'user_id'        => auth()->id(),
+                        'type'           => 'in',
+                        'stock_qty'      => $stockQty,
+                        'price'          => $request->price[$k],
+                        'dis_price'      => $request->price[$k] - ($request->price[$k] * $request->discount / 100),
+                        'discount'       => $request->discount,
+                        'bill_id'        => $bill->id,
+                        'bill_detail_id' => $detailRecord->id,
+                    ]);
+        
+                    // Stock
+                    $instance->stock()->updateOrCreate(
+                        [
+                            'user_id'    => auth()->id(),
+                            'model_type' => get_class($instance),
+                            'model_id'   => $instance->id
+                        ], [
+                            'stock_qty' => (@$stock->stock_qty) + ($stockQty * $multiplier)
+                        ]
+                    );
                 }
 
-                // Transaction
-                $instance->transaction()->create([
-                    'user_id'   => auth()->id(),
-                    'type'      => 'in',
-                    'stock_qty' => $stockQty,
-                    'price'     => $request->price[$k],
-                    'dis_price' => $request->price[$k] - ($request->price[$k] * $request->discount / 100),
-                    'discount'  => $request->discount,
-                ]);
-    
-                // Stock
-                $instance->stock()->updateOrCreate(
-                    [
-                        'user_id'    => auth()->id(),
-                        'model_type' => get_class($instance),
-                        'model_id'   => $instance->id
-                    ], [
-                        'stock_qty' => (@$stock->stock_qty) + ($stockQty * $multiplier)
-                    ]
-                );
+                if ($unsavedStocks) {
+                    throw ValidationException::withMessages([
+                        'stock' => 'The following stocks are not enough: ' . implode(', ', $unsavedStocks)
+                    ]);
+                }
+            });
 
-                // Billing Detail
-                [$product, $sku] = $instance instanceof Product ? [$instance, null] : [$instance->product, $instance];
-                BillingDetail::create([
-                    'user_id'           => auth()->id(),
-                    'billing_slip_id'   => $bill->id,
-                    'product_id'        => $product->id,
-                    'sku_id'            => @$sku->id,
-                    'qty'               => $stockQty,
-                    'unit_price'        => $request->unit_price[$k],
-                    'price'             => $request->price[$k],
-                ]);
-            }
-        });
+            session()->flash('success', 'Purchase slip created successfully');
 
-        session()->flash('success', 'Purchase slip created successfully');
-
-        if ($unsavedStocks) {
-            session()->flash('error', $unsavedStocks);
+            return to_route('admin.purchases.index');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         }
-
-        return to_route('admin.purchases.index');
-    }
-
-    private function resolveModelInstance($id)
-    {
-        $ids = explode("|", $id);
-        if (count($ids) !== 2) return null;
-
-        $id1 = explode(":", $ids[0]);
-        $id2 = explode(":", $ids[1]);
-
-        if (count($id1) !== 2 && count($id2) !== 2) return null;
-
-        if ($id1[0] === $id2[0] && $id1[0] === 'p') {
-            $model = Product::class;
-            $id    = $id1[1];
-        } else if ($id2[0] === 's') {
-            $model = Sku::class;
-            $id    = $id2[1];
-        }
-
-        $instance = $model::where('user_id', auth()->id())->where('is_active', 1)->find($id);
-        if ($instance && $instance instanceof Product) {
-            $instance->load('skus');
-            $instance = $instance->skus->count() ? null : $instance;
-        }
-
-        return $instance;
     }
 
     public function show($id)
     {
         $billing = BillingSlip::where('user_id', auth()->id())->find($id);
-        abort_if(!$billing, 404);
+        abort_if(!$billing, 403);
 
         $slip_no  = $billing->slip_no;
 
@@ -188,5 +186,24 @@ class PurchaseController extends Controller
         $skus     = Sku::with(['color', 'size'])->where('user_id', auth()->id())->whereIn('id', $details->pluck('sku_id'))->get()->keyBy('id');
 
         return view('admin.purchases.show', compact('billing', 'details', 'products', 'skus', 'slip_no'));
+    }
+
+    private function exportPDF($billing)
+    {
+        abort_if(!$billing, 404);
+
+        $details  = BillingDetail::where('user_id', auth()->id())->where('billing_slip_id', $billing->id)->get();
+
+        $products = Product::where('user_id', auth()->id())->whereIn('id', $details->pluck('product_id'))->get()->keyBy('id');
+        $skus     = Sku::with(['color', 'size'])->where('user_id', auth()->id())->whereIn('id', $details->pluck('sku_id'))->get()->keyBy('id');
+
+        view()->share(compact('billing', 'details', 'products', 'skus'));
+
+        $pdfName = 'PurchaseSlip_' . $billing->slip_no . '_' . date('YmdHis') . ".pdf";
+        $pdf     = Pdf::loadView('admin.purchases.htmltopdf');
+
+        return $pdf->inline($pdfName);
+
+        // return view('admin.purchases.htmltopdf', );
     }
 }

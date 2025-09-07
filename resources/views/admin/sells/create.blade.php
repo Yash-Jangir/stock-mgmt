@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            <a href="{{ route('admin.purchases.index') }}">{{ __('Purchase List') }}</a> > {{ __('Create') }}
+            <a href="{{ route('admin.sells.index') }}">{{ __('Sell List') }}</a> > {{ __('Create Bill') }}
         </h2>
     </x-slot>
 
@@ -22,12 +22,12 @@
                 <section>
                     <header class="flex items-center justify-between gap-4 mb-4">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {{ __('Supplier Details') }}
+                            {{ __('Customer Details') }}
                         </h2>
                         <x-secondary-button type="button" id="scan-qrcode">{{ __('SCAN QRCODE') }}</x-secondary-button>
                     </header>
 
-                    <form id="stock-form" method="post" action="{{ route('admin.purchases.store') }}" class="mt-6">
+                    <form id="stock-form" method="post" action="{{ route('admin.sells.store') }}" class="mt-6">
                         @csrf
 
                         <div id="supplier-details">
@@ -52,21 +52,11 @@
                             <div class="grid grid-cols-2 gap-4 mb-2">
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <x-input-label class="w-[100px]" for="supplier_name" :value="__('Supplier Name')" />
-                                        <x-text-input id="supplier_name" name="supplier_name" :value="old('supplier_name', '')" class="mt-1 block grow" required />
+                                        <x-input-label class="w-[100px]" for="customer_name" :value="__('Customer Name')" />
+                                        <x-text-input id="customer_name" name="customer_name" :value="old('customer_name', '')" class="mt-1 block grow" required />
                                     </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('supplier_name')" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('customer_name')" />
                                 </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <x-input-label class="w-[100px]" for="gst_number" :value="__('GST Number')" />
-                                        <x-text-input id="gst_number" name="gst_number" :value="old('gst_number', '')" class="mt-1 block grow" />
-                                    </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('gst_number')" />
-                                </div>
-                            </div>
-    
-                            <div class="grid grid-cols-1 gap-4 mb-2">
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <x-input-label class="w-[100px]" for="address" :value="__('Address')" />
@@ -152,7 +142,7 @@
 
 
                         <div class="flex items-center justify-end gap-4 mt-8">
-                            <a href="{{ route('admin.purchases.index') }}">
+                            <a href="{{ route('admin.sells.index') }}">
                                 <x-secondary-button>{{ __('Cancel') }}</x-secondary-button>
                             </a>
                             <x-primary-button type="button" id="save-stock">{{ __('Save') }}</x-primary-button>
@@ -203,7 +193,7 @@
                 };
 
                 const formSubmition = (form) => {
-                    const typeOut = false;
+                    const typeOut = true;
                     $('[name="product_id[]"]').each(function () {
                         if (!$(this).val()) {
                             $(this).closest('tr').css({'background': 'tomato'}).remove();
@@ -411,7 +401,7 @@
                 });
 
                 $('body').on('change', '[name="qty[]"]', function () {
-                    const typeOut  = false;
+                    const typeOut  = true;
                     const row      = $(this).closest('tr');
                     const product  = row.find('[name="product_id[]"]').val();
                     let unit_price = strtonum(row.find('[name="unit_price[]"]').val());

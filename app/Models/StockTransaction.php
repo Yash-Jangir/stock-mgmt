@@ -20,6 +20,8 @@ class StockTransaction extends Model
         'price',
         'dis_price',
         'discount',
+        'bill_id',
+        'bill_detail_id',
     ];
 
     public function model()

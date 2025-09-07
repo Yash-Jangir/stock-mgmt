@@ -57,8 +57,8 @@ Route::middleware(['auth'])
     Route::resource('stocks', StockController::class)->only(['index', 'create', 'store']);
 
     // Purchase Controller
-    Route::resource('purchases', PurchaseController::class);
+    Route::resource('purchases', PurchaseController::class)->except(['edit', 'destroy']);
 
     // Sell Controller
-    Route::resource('sells', SellController::class);
+    Route::resource('sells', SellController::class)->except(['edit', 'destroy']);
 });

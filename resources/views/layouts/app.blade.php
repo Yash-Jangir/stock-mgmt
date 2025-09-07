@@ -13,8 +13,7 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="{{ asset('/assets/css/fonts.css') }}" rel="stylesheet" />
 
         <link rel="stylesheet" href="{{ asset('/assets/css/toastr.min.css') }}">
 
@@ -91,6 +90,12 @@
             @if (session('error'))
                 @foreach (is_array(session('error')) ? session('error') : [session('error')] as $message)
                     toastr.error('{{ $message }}');
+                @endforeach
+            @endif
+
+            @if ($errors->any())
+                @foreach ($errors->all() as $error)
+                    toastr.error('{!! $error !!}');
                 @endforeach
             @endif
         </script>

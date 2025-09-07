@@ -21,6 +21,8 @@ return new class extends Migration
             $table->unsignedInteger('price')->default(0)->nullable();
             $table->unsignedInteger('dis_price')->default(0)->nullable();
             $table->unsignedInteger('discount')->default(0)->nullable();
+            $table->unsignedInteger('bill_id')->nullable();
+            $table->unsignedInteger('bill_detail_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

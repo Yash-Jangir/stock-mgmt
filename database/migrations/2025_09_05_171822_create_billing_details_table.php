@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('qty')->nullable();
             $table->unsignedInteger('unit_price')->nullable();
             $table->unsignedBigInteger('price')->nullable();
+            $table->unsignedInteger('unit_discount')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

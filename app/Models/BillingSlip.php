@@ -30,14 +30,14 @@ class BillingSlip extends Model
         'deleted_at',
     ];
 
-    public static function newSeqNo()
+    public static function newSeqNo($classification)
     {
-        return BillingSlip::where('user_id', auth()->id())->where('year', date('Y'))->max('seq') + 1;
+        return BillingSlip::withTrashed()->where('user_id', auth()->id())->where('classification', $classification)->where('year', date('Y'))->max('seq') + 1;
     }
 
-    public static function newSlipNo()
+    public static function newSlipNo($classification)
     {
-        return date('Y') . '-' . Str::padLeft(self::newSeqNo(), 4, '0');
+        return date('Y') . '-' . Str::padLeft(self::newSeqNo($classification), 4, '0');
     }
 
     public function getSlipNoAttribute()

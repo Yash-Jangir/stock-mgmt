@@ -13,7 +13,12 @@
         </div>
     </x-slot>
 
-    <div id="filters" class="{{ (!array_filter(request()->all())) ? 'hidden' : '' }} pt-4">
+    @php 
+        $reqData = request()->all(); 
+        unset($reqData['page']);
+        $isFiltered = count($reqData);
+    @endphp
+    <div id="filters" class="{{ (!$isFiltered) ? 'hidden' : '' }} pt-4">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 relative text-gray-900 dark:text-gray-100">
@@ -71,7 +76,7 @@
     <div class="pt-12 pb-4">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+                <div class="p-6 text-gray-900 dark:text-gray-100 overflow-x-auto">
                     
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-100 dark:bg-gray-800">
@@ -101,6 +106,9 @@
                                     <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $purchase->discount }}%</td>
                                     <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         <div class="flex items-center justify-end gap-4">
+                                            <!-- {{-- <a href="{{ route('admin.purchases.index', ['export' => 'pdf', 'id' => $purchase->id]) }}" target="_blank">
+                                                <x-secondary-button type="button">{{ __('PDF') }}</x-secondary-button>
+                                            </a>  --}} -->
                                             <a href="{{ route('admin.purchases.show', $purchase->id) }}">
                                                 <x-secondary-button type="button">{{ __('Detail') }}</x-secondary-button>
                                             </a>
